@@ -1,13 +1,13 @@
-import { useState } from 'react'
-import { useForm, ValidationError } from '@formspree/react'
+import { useState, useRef } from 'react'
+import emailjs from '@emailjs/browser'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { usePageTitle } from '../lib/usePageTitle'
 
-// ⚠️ Eigenes Formspree-Formular für Junioren erstellen auf formspree.io
-// und ID hier eintragen (aktuell wird dasselbe wie Club 222 verwendet)
-const FORMSPREE_ID = 'xjgdqbea'
+const SERVICE_ID  = 'service_8n1t8br'
+const TEMPLATE_ID = 'template_afpaiuv'
+const PUBLIC_KEY  = 'JUgNPNA5Zxd4sOIX4'
 
 const inputClass = 'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-fc-rot'
 const labelClass = 'block text-sm font-semibold text-fc-dunkel mb-1'
@@ -15,9 +15,23 @@ const labelClass = 'block text-sm font-semibold text-fc-dunkel mb-1'
 export default function JuniorenAnmeldung() {
   usePageTitle('Junioren-Anmeldung', 'Melde dein Kind bei der Nachwuchsabteilung des FC Sursee an.')
 
-  const [state, handleSubmit] = useForm(FORMSPREE_ID)
+  const formRef             = useRef(null)
+  const [status, setStatus] = useState('idle') // idle | sending | success | error
   const [trainerInformiert, setTrainerInformiert] = useState('')
-  const [bestaetigt, setBestaetigt] = useState(false)
+  const [bestaetigt, setBestaetigt]               = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!bestaetigt || !trainerInformiert || status === 'sending') return
+    setStatus('sending')
+    try {
+      await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, formRef.current, PUBLIC_KEY)
+      setStatus('success')
+    } catch (err) {
+      console.error(err)
+      setStatus('error')
+    }
+  }
 
   return (
     <>
@@ -42,7 +56,7 @@ export default function JuniorenAnmeldung() {
       <main className="bg-fc-grau min-h-screen py-12">
         <div className="max-w-2xl mx-auto px-6">
 
-          {state.succeeded ? (
+          {status === 'success' ? (
             <div className="bg-white rounded-xl p-10 shadow-sm text-center">
               <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -62,7 +76,7 @@ export default function JuniorenAnmeldung() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
 
               {/* Angaben Spieler */}
               <div className="bg-white rounded-xl p-8 shadow-sm">
@@ -74,22 +88,18 @@ export default function JuniorenAnmeldung() {
                   <div>
                     <label className={labelClass} htmlFor="vorname_spieler">Vorname *</label>
                     <input id="vorname_spieler" name="vorname_spieler" type="text" required className={inputClass} />
-                    <ValidationError field="vorname_spieler" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="nachname_spieler">Nachname *</label>
                     <input id="nachname_spieler" name="nachname_spieler" type="text" required className={inputClass} />
-                    <ValidationError field="nachname_spieler" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="geburtsdatum">Geburtsdatum *</label>
                     <input id="geburtsdatum" name="geburtsdatum" type="date" required className={inputClass} />
-                    <ValidationError field="geburtsdatum" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="nationalitaet">Nationalität *</label>
                     <input id="nationalitaet" name="nationalitaet" type="text" required className={inputClass} placeholder="z.B. Schweiz" />
-                    <ValidationError field="nationalitaet" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass} htmlFor="email_spieler">E-Mail Spieler/in</label>
@@ -98,7 +108,6 @@ export default function JuniorenAnmeldung() {
                   <div className="sm:col-span-2">
                     <label className={labelClass} htmlFor="ahv_nummer">AHV-Nummer *</label>
                     <input id="ahv_nummer" name="ahv_nummer" type="text" required className={inputClass} placeholder="756.XXXX.XXXX.XX (auf Krankenkassenkarte)" />
-                    <ValidationError field="ahv_nummer" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                 </div>
               </div>
@@ -113,22 +122,18 @@ export default function JuniorenAnmeldung() {
                   <div className="sm:col-span-2">
                     <label className={labelClass} htmlFor="name_eltern">Vor- und Nachname *</label>
                     <input id="name_eltern" name="name_eltern" type="text" required className={inputClass} />
-                    <ValidationError field="name_eltern" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass} htmlFor="strasse">Strasse *</label>
                     <input id="strasse" name="strasse" type="text" required className={inputClass} />
-                    <ValidationError field="strasse" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="plz">PLZ *</label>
                     <input id="plz" name="plz" type="text" required className={inputClass} placeholder="6210" />
-                    <ValidationError field="plz" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="ort">Ort *</label>
                     <input id="ort" name="ort" type="text" required className={inputClass} placeholder="Sursee" />
-                    <ValidationError field="ort" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div>
                     <label className={labelClass} htmlFor="telefon">Telefon</label>
@@ -137,12 +142,10 @@ export default function JuniorenAnmeldung() {
                   <div>
                     <label className={labelClass} htmlFor="mobil_eltern">Mobil *</label>
                     <input id="mobil_eltern" name="mobil_eltern" type="tel" required className={inputClass} />
-                    <ValidationError field="mobil_eltern" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass} htmlFor="email_eltern">E-Mail *</label>
-                    <input id="email_eltern" name="email" type="email" required className={inputClass} />
-                    <ValidationError field="email" errors={state.errors} className="text-fc-rot text-xs mt-1" />
+                    <input id="email_eltern" name="email_eltern" type="email" required className={inputClass} />
                   </div>
                 </div>
               </div>
@@ -210,7 +213,6 @@ export default function JuniorenAnmeldung() {
                   <input
                     type="checkbox"
                     name="bestaetigung"
-                    required
                     checked={bestaetigt}
                     onChange={e => setBestaetigt(e.target.checked)}
                     className="mt-1 shrink-0 accent-[#E31E26]"
@@ -223,14 +225,18 @@ export default function JuniorenAnmeldung() {
                 </label>
               </div>
 
-              <ValidationError errors={state.errors} className="text-fc-rot text-sm" />
+              {status === 'error' && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
+                  Fehler beim Senden. Bitte versuche es erneut oder schreibe direkt an info@fcsursee.ch.
+                </p>
+              )}
 
               <button
                 type="submit"
-                disabled={state.submitting || !bestaetigt || !trainerInformiert}
+                disabled={status === 'sending' || !bestaetigt || !trainerInformiert}
                 className="w-full bg-fc-rot text-white font-bold py-3.5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
               >
-                {state.submitting ? 'Wird gesendet…' : 'Anmeldung absenden'}
+                {status === 'sending' ? 'Wird gesendet…' : 'Anmeldung absenden'}
               </button>
               <p className="text-fc-text text-xs text-center pb-4">
                 * Pflichtfelder — Wir kontaktieren dich nach Eingang der Anmeldung.

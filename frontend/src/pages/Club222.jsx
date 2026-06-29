@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react'
-import { useForm, ValidationError } from '@formspree/react'
+import emailjs from '@emailjs/browser'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { client } from '../lib/sanity'
 import { usePageTitle } from '../lib/usePageTitle'
 
+const SERVICE_ID  = 'service_8n1t8br'
+const TEMPLATE_ID = 'template_h7sxoop'
+const PUBLIC_KEY  = 'JUgNPNA5Zxd4sOIX4'
+
 const MITGLIEDER_QUERY = `*[_type == "club222" && aktiv == true] | order(name asc) { _id, name }`
 
 const VORTEILE = [
-  { icon: '🎫', titel: 'Freier Eintritt',   text: 'Kostenloser Eintritt zu allen Meisterschaftsspielen im Stadion Schlottermilch.' },
-  { icon: '💰', titel: 'CHF 50.– Cash-Back', text: 'Wenn du ein neues Mitglied aquirierst, erhältst du CHF 50.– zurück.' },
-  { icon: '🤝', titel: 'Teil der Familie',    text: 'Als Gönnermitglied bist du Teil der FC Sursee Familie und unterstützt deinen Verein direkt.' },
-  { icon: '📣', titel: 'Exklusive Infos',     text: 'Erhalte frühzeitig News und Infos zu Vereinsanlässen.' },
+  { icon: '\u{1F3AB}', titel: 'Freier Eintritt',    text: 'Kostenloser Eintritt zu allen Meisterschaftsspielen im Stadion Schlottermilch.' },
+  { icon: '\u{1F4B0}', titel: 'CHF 50.– Cash-Back', text: 'Wenn du ein neues Mitglied aquirierst, erhältst du CHF 50.– zurück.' },
+  { icon: '\u{1F91D}', titel: 'Teil der Familie',    text: 'Als Gönnermitglied bist du Teil der FC Sursee Familie und unterstützt deinen Verein direkt.' },
+  { icon: '\u{1F4E3}', titel: 'Exklusive Infos',     text: 'Erhalte frühzeitig News und Infos zu Vereinsanlässen.' },
 ]
 
 const TABS = ['Club 222', 'Donatorenverein']
@@ -22,13 +26,35 @@ export default function Club222() {
   const [aktiverTab, setAktiverTab] = useState('Club 222')
   const [typ, setTyp]               = useState('einzel')
   const [mitglieder, setMitglieder] = useState([])
-  const [state, handleSubmit]       = useForm('mbdevrjq')
+  const [status, setStatus]         = useState('idle') // idle | sending | success | error
 
   useEffect(() => {
-    client.fetch(MITGLIEDER_QUERY)
-      .then(setMitglieder)
-      .catch(() => {})
+    client.fetch(MITGLIEDER_QUERY).then(setMitglieder).catch(() => {})
   }, [])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (status === 'sending') return
+    setStatus('sending')
+    const data     = new FormData(e.target)
+    const name     = data.get('name')
+    const email    = data.get('email')
+    const mitglied = typ === 'einzel' ? 'Einzelperson CHF 222' : 'Ehepaar CHF 333'
+    const msg      = data.get('nachricht') || '–'
+    try {
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+        betreff:   `Neue Gönner-Anmeldung: ${name} (${mitglied})`,
+        nachricht: `NEUE GÖNNER-ANMELDUNG — CLUB 222\n\nName: ${name}\nE-Mail: ${email}\nMitgliedschaft: ${mitglied}\n\nNachricht:\n${msg}`,
+        reply_to:  email,
+      }, PUBLIC_KEY)
+      setStatus('success')
+      e.target.reset()
+      setTyp('einzel')
+    } catch (err) {
+      console.error(err)
+      setStatus('error')
+    }
+  }
 
   return (
     <>
@@ -70,7 +96,6 @@ export default function Club222() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
               <div className="space-y-6">
-
                 <div className="bg-white rounded-xl p-8 shadow-sm">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="w-1 h-6 bg-fc-rot rounded-full block" />
@@ -127,7 +152,6 @@ export default function Club222() {
                     }
                   </div>
                 </div>
-
               </div>
 
               <div>
@@ -137,7 +161,7 @@ export default function Club222() {
                     <h2 className="text-xl font-black text-fc-dunkel">Jetzt anmelden</h2>
                   </div>
 
-                  {state.succeeded ? (
+                  {status === 'success' ? (
                     <div className="text-center py-8">
                       <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -146,13 +170,13 @@ export default function Club222() {
                         </svg>
                       </div>
                       <p className="font-bold text-fc-dunkel text-lg mb-2">Vielen Dank!</p>
-                      <p className="text-fc-text text-sm">Wir melden uns in Kürze bei dir.</p>
+                      <p className="text-fc-text text-sm mb-4">Wir melden uns in Kürze bei dir.</p>
+                      <button onClick={() => setStatus('idle')} className="text-sm text-fc-rot font-semibold hover:underline">
+                        Neue Anmeldung
+                      </button>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <input type="hidden" name="mitgliedschaft"
-                        value={typ === 'einzel' ? 'Einzelperson CHF 222' : 'Ehepaar CHF 333'} />
-
                       <div>
                         <label className="block text-sm font-semibold text-fc-dunkel mb-1" htmlFor="name">Name *</label>
                         <input
@@ -160,7 +184,6 @@ export default function Club222() {
                           className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-fc-rot"
                           placeholder="Vorname Nachname"
                         />
-                        <ValidationError field="name" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                       </div>
 
                       <div>
@@ -170,7 +193,6 @@ export default function Club222() {
                           className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-fc-rot"
                           placeholder="name@beispiel.ch"
                         />
-                        <ValidationError field="email" errors={state.errors} className="text-fc-rot text-xs mt-1" />
                       </div>
 
                       <div>
@@ -199,13 +221,17 @@ export default function Club222() {
                         />
                       </div>
 
-                      <ValidationError errors={state.errors} className="text-fc-rot text-xs" />
+                      {status === 'error' && (
+                        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
+                          Fehler beim Senden. Bitte versuche es erneut oder schreibe an info@fcsursee.ch.
+                        </p>
+                      )}
 
                       <button
-                        type="submit" disabled={state.submitting}
+                        type="submit" disabled={status === 'sending'}
                         className="w-full bg-fc-rot text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                       >
-                        {state.submitting ? 'Wird gesendet…' : 'Anmeldung absenden'}
+                        {status === 'sending' ? 'Wird gesendet…' : 'Anmeldung absenden'}
                       </button>
                       <p className="text-fc-text text-xs text-center">
                         Kein automatischer Einzug — wir kontaktieren dich für die Zahlungsdetails.
