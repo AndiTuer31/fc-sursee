@@ -6,9 +6,12 @@ export default function Hero() {
   const s = useSiteSettings()
   const [aktiv, setAktiv] = useState(0)
 
-  const bilder = s.heroBilder?.length > 0
-    ? s.heroBilder.map(b => ({ url: imageUrl(b.bild) || '/headerbild.jpeg', alt: b.alt || 'FC Sursee' }))
-    : [{ url: '/headerbild.jpeg', alt: 'FC Sursee Stadion' }]
+  // null = Sanity noch nicht geladen → kein Fallback-Bild anzeigen
+  const bilder = s.heroBilder === null
+    ? []
+    : s.heroBilder.length > 0
+      ? s.heroBilder.map(b => ({ url: imageUrl(b.bild), alt: b.alt || 'FC Sursee' })).filter(b => b.url)
+      : []
 
   useEffect(() => {
     if (bilder.length <= 1) return
@@ -81,11 +84,11 @@ export default function Hero() {
         </div>
 
         {/* Stats */}
-        <div className="border-t border-white/20 pt-6 flex flex-wrap gap-0">
+        <div className="border-t border-white/20 pt-6 flex flex-wrap gap-y-5">
           {STATS.filter(st => st.zahl).map((stat, i) => (
             <div
               key={i}
-              className={`flex flex-col gap-1 pr-5 md:pr-10 ${i > 0 ? 'pl-5 md:pl-10 border-l border-white/20' : ''}`}
+              className={`flex flex-col gap-1 pr-6 md:pr-10 ${i > 0 ? 'pl-6 md:pl-10 border-l border-white/20' : ''}`}
             >
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-none" style={shadowStyle}>{stat.zahl}</span>
               {stat.label && (

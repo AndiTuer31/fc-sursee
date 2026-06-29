@@ -33,7 +33,7 @@ const DEFAULTS = {
   anzahl_junioren:     '450+',
   liga_name:           '2. Liga Interregional',
   quality_club_jahre:  '2024–2026',
-  heroBilder:          [],
+  heroBilder:          null,
 }
 
 export function useSiteSettings() {
