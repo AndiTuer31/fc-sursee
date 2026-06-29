@@ -4,9 +4,9 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { usePageTitle } from '../lib/usePageTitle'
 
-const SERVICE_ID  = 'service_lpqlr0g'
-const TEMPLATE_ID = 'template_a9n2kp2'
-const PUBLIC_KEY  = 'NKP5Qb5-cO2IreHRe'
+const SERVICE_ID  = 'service_8n1t8br'
+const TEMPLATE_ID = 'template_h7sxoop'
+const PUBLIC_KEY  = 'JUgNPNA5Zxd4sOIX4'
 
 const BETREFF_OPTIONEN = [
   'Allgemeine Anfrage',
