@@ -48,3 +48,12 @@ Benutzername:		webseite.fcsursee@gmail.com
 
 PW:			fcSurseePW2026!
 
+
+**Email JS**
+
+
+
+Benutzername:		webseite.fcsursee@gmail.com
+
+PW:			fcSurseePW2026!
+

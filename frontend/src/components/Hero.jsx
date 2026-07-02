@@ -84,11 +84,11 @@ export default function Hero() {
         </div>
 
         {/* Stats */}
-        <div className="border-t border-white/20 pt-6 flex flex-wrap gap-y-5">
+        <div className="border-t border-white/20 pt-6 flex flex-col sm:flex-row gap-y-5">
           {STATS.filter(st => st.zahl).map((stat, i) => (
             <div
               key={i}
-              className={`flex flex-col gap-1 pr-6 md:pr-10 ${i > 0 ? 'pl-6 md:pl-10 border-l border-white/20' : ''}`}
+              className={`flex flex-col gap-1 sm:pr-6 md:pr-10 ${i > 0 ? 'sm:pl-6 md:pl-10 sm:border-l sm:border-white/20' : ''}`}
             >
               <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-none" style={shadowStyle}>{stat.zahl}</span>
               {stat.label && (
